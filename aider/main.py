@@ -13,6 +13,7 @@ from aider.coders import Coder
 from aider.io import InputOutput
 from aider.repo import GitRepo
 from aider.versioncheck import check_version
+from aider.getinput import InputOutputHandler
 
 from .dump import dump  # noqa: F401
 
@@ -664,16 +665,10 @@ def main(argv=None, input=None, output=None, force_git_root=None):
     else:
         coder.run()
 
-# Calculate or retrieve the usage cost
-def get_usage_cost():
-    # Placeholder function returning a mock cost
-    return 0.99 # Mock cost
-
 if __name__ == "__main__":
     status = main()
     
     # Display the calculated usage cost before exiting
-    usage_cost = get_usage_cost()
-    print(f"Total usage cost: ${usage_cost}")
+    # Access and display `total_cost` from coder instance
     
     sys.exit(status)
