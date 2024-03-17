@@ -50,6 +50,7 @@ class Coder:
     repo_map = None
     functions = None
     total_cost = 0.0
+    price_per_thousand_tokens = 0.06  # Hypothetical price per 1,000 tokens for GPT-4 Turbo
     num_exhausted_context_windows = 0
     num_malformed_responses = 0
     last_keyboard_interrupt = None
@@ -706,6 +707,20 @@ class Coder:
         resp_hash = hashlib.sha1(json.dumps(resp_hash, sort_keys=True).encode())
         self.chat_completion_response_hashes.append(resp_hash.hexdigest())
 
+        # Calculate the cost of the API call
+        if hasattr(completion, "usage") and completion.usage is not None:
+            prompt_tokens = completion.usage.prompt_tokens
+            completion_tokens = completion.usage.completion_tokens
+
+            prompt_cost = prompt_tokens * self.price_per_thousand_tokens / 1000
+            completion_cost = completion_tokens * self.price_per_thousand_tokens / 1000
+            total_cost = prompt_cost + completion_cost
+            tokens = f"{prompt_tokens} prompt tokens, {completion_tokens} completion tokens"
+            tokens += f", total cost: ${total_cost:.6f}"
+            self.total_cost += total_cost
+        else:
+            tokens = None
+
         if show_func_err and show_content_err:
             self.io.tool_error(show_func_err)
             self.io.tool_error(show_content_err)
@@ -731,6 +746,9 @@ class Coder:
             show_resp = Text(show_resp or "<no response>")
 
         self.io.console.print(show_resp)
+
+        if tokens is not None:
+            self.io.tool_output(tokens)
 
         if tokens is not None:
             self.io.tool_output(tokens)
