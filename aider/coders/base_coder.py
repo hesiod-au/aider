@@ -716,13 +716,13 @@ class Coder:
             prompt_tokens = completion.usage.prompt_tokens
             completion_tokens = completion.usage.completion_tokens
 
-            tokens = f"{prompt_tokens} prompt tokens, {completion_tokens} completion tokens"
-            if self.main_model.prompt_price:
-                cost = prompt_tokens * self.main_model.prompt_price / 1000
-                if self.main_model.completion_price:
-                    cost += completion_tokens * self.main_model.completion_price / 1000
-                tokens += f", ${cost:.6f} cost"
-                self.total_cost += cost
+            prompt_cost = prompt_tokens * 0.01 / 1000
+            completion_cost = completion_tokens * 0.03 / 1000
+            total_cost = prompt_cost + completion_cost
+            tokens = (f"{prompt_tokens} prompt tokens at $0.01/1k, "
+                      f"{completion_tokens} completion tokens at $0.03/1k, "
+                      f"total cost: ${total_cost:.6f}")
+            self.total_cost += total_cost
 
         show_resp = self.render_incremental_response(True)
         if self.show_pretty():
