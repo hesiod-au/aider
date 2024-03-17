@@ -50,6 +50,8 @@ class Coder:
     repo_map = None
     functions = None
     total_cost = 0.0
+    price_per_prompt_token = 0.01 / 1000  # Price per prompt token
+    price_per_completion_token = 0.03 / 1000  # Price per completion token
     num_exhausted_context_windows = 0
     num_malformed_responses = 0
     last_keyboard_interrupt = None
@@ -715,23 +717,35 @@ class Coder:
         resp_hash = hashlib.sha1(json.dumps(resp_hash, sort_keys=True).encode())
         self.chat_completion_response_hashes.append(resp_hash.hexdigest())
 
+        # Calculate the cost of the API call
+        if hasattr(completion, "usage") and completion.usage is not None:
+            prompt_tokens = completion.usage.prompt_tokens
+            completion_tokens = completion.usage.completion_tokens
+
+            prompt_cost = prompt_tokens * self.price_per_prompt_token
+            completion_cost = completion_tokens * self.price_per_completion_token
+            total_cost = prompt_cost + completion_cost
+            tokens = f"{prompt_tokens} prompt tokens, {completion_tokens} completion tokens"
+            tokens += f", total cost: ${total_cost:.6f}"
+            self.total_cost += total_cost
+        else:
+            tokens = None
+
         if show_func_err and show_content_err:
             self.io.tool_error(show_func_err)
             self.io.tool_error(show_content_err)
             raise Exception("No data found in openai response!")
 
-        tokens = None
         if hasattr(completion, "usage") and completion.usage is not None:
             prompt_tokens = completion.usage.prompt_tokens
             completion_tokens = completion.usage.completion_tokens
 
+            prompt_cost = prompt_tokens * 0.01 / 1000
+            completion_cost = completion_tokens * 0.03 / 1000
+            total_cost = prompt_cost + completion_cost
             tokens = f"{prompt_tokens} prompt tokens, {completion_tokens} completion tokens"
-            if self.main_model.prompt_price:
-                cost = prompt_tokens * self.main_model.prompt_price / 1000
-                if self.main_model.completion_price:
-                    cost += completion_tokens * self.main_model.completion_price / 1000
-                tokens += f", ${cost:.6f} cost"
-                self.total_cost += cost
+            tokens += f", total cost: ${total_cost:.6f}"
+            self.total_cost += total_cost
 
         show_resp = self.render_incremental_response(True)
         if self.show_pretty():
@@ -742,6 +756,9 @@ class Coder:
             show_resp = Text(show_resp or "<no response>")
 
         self.io.console.print(show_resp)
+
+        if tokens is not None:
+            self.io.tool_output(tokens)
 
         if tokens is not None:
             self.io.tool_output(tokens)
