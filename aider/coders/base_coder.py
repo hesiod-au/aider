@@ -50,7 +50,8 @@ class Coder:
     repo_map = None
     functions = None
     total_cost = 0.0
-    price_per_thousand_tokens = 0.06  # Hypothetical price per 1,000 tokens for GPT-4 Turbo
+    price_per_prompt_token = 0.01 / 1000  # Price per prompt token
+    price_per_completion_token = 0.03 / 1000  # Price per completion token
     num_exhausted_context_windows = 0
     num_malformed_responses = 0
     last_keyboard_interrupt = None
@@ -712,8 +713,8 @@ class Coder:
             prompt_tokens = completion.usage.prompt_tokens
             completion_tokens = completion.usage.completion_tokens
 
-            prompt_cost = prompt_tokens * self.price_per_thousand_tokens / 1000
-            completion_cost = completion_tokens * self.price_per_thousand_tokens / 1000
+            prompt_cost = prompt_tokens * self.price_per_prompt_token
+            completion_cost = completion_tokens * self.price_per_completion_token
             total_cost = prompt_cost + completion_cost
             tokens = f"{prompt_tokens} prompt tokens, {completion_tokens} completion tokens"
             tokens += f", total cost: ${total_cost:.6f}"
