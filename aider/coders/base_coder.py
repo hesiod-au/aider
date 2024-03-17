@@ -663,10 +663,19 @@ class Coder:
             )
             self.chat_completion_call_hashes.append(hash_object.hexdigest())
 
+            if completion and completion.choices:
+                input_tokens = self.main_model.token_count(messages)
+                output_tokens = self.main_model.token_count(completion.choices[0].text)
+                tokens_price_per_1000 = 0.002  # Assuming $0.002 per token for GPT-4-Turbo
+                interaction_cost = (input_tokens + output_tokens) * tokens_price_per_1000 / 1000
+                self.total_cost += interaction_cost
+                cost_message = f"Input tokens: {input_tokens}, Output tokens: {output_tokens}, Interaction cost: ${interaction_cost:.6f}, Total cost: ${self.total_cost:.6f}"
+                self.io.tool_output(cost_message)
+
             if self.stream:
                 self.show_send_output_stream(completion)
             else:
-                self.show_send_output(completion)
+                this.show_send_output(completion)
         except KeyboardInterrupt:
             self.keyboard_interrupt()
             interrupted = True
