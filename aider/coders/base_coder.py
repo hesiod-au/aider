@@ -711,7 +711,6 @@ class Coder:
             self.io.tool_error(show_content_err)
             raise Exception("No data found in openai response!")
 
-        tokens = None
         if hasattr(completion, "usage") and completion.usage is not None:
             prompt_tokens = completion.usage.prompt_tokens
             completion_tokens = completion.usage.completion_tokens
@@ -719,9 +718,8 @@ class Coder:
             prompt_cost = prompt_tokens * 0.01 / 1000
             completion_cost = completion_tokens * 0.03 / 1000
             total_cost = prompt_cost + completion_cost
-            tokens = (f"{prompt_tokens} prompt tokens at $0.01/1k, "
-                      f"{completion_tokens} completion tokens at $0.03/1k, "
-                      f"total cost: ${total_cost:.6f}")
+            tokens = f"{prompt_tokens} prompt tokens, {completion_tokens} completion tokens"
+            tokens += f", total cost: ${total_cost:.6f}"
             self.total_cost += total_cost
 
         show_resp = self.render_incremental_response(True)
